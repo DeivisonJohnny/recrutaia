@@ -43,7 +43,7 @@ export async function GET(
     const id = decodeURIComponent(rawId);
 
     const apiKey =
-      process.env.SCRAPINGDOG_API_KEY || "691de0abaeb1455d9689ac05"; // Fallback to example key
+      process.env.SCRAPINGDOG_API_KEY || "691e07e9ae2b1f511a20af8e"; // Fallback to example key
 
     if (!apiKey) {
       console.error("Missing SCRAPINGDOG_API_KEY configuration");
@@ -82,22 +82,24 @@ export async function GET(
     }
 
     const responseData = await response.json();
-    console.log("Scrapingdog response data:", JSON.stringify(responseData, null, 2));
+    console.log(
+      "Scrapingdog response data:",
+      JSON.stringify(responseData, null, 2)
+    );
 
     // API returns an array, get the first element
-    const data: ScrapingdogProfile = Array.isArray(responseData) ? responseData[0] : responseData;
+    const data: ScrapingdogProfile = Array.isArray(responseData)
+      ? responseData[0]
+      : responseData;
 
     if (!data) {
-      return NextResponse.json(
-        { error: "Profile not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Profile not found" }, { status: 404 });
     }
 
     // Parse followers/connections from strings like "332 followers" -> 332
     const parseCount = (str: string | number | undefined): number => {
-      if (typeof str === 'number') return str;
-      if (typeof str === 'string') {
+      if (typeof str === "number") return str;
+      if (typeof str === "string") {
         const match = str.match(/(\d+)/);
         return match ? parseInt(match[1]) : 0;
       }
@@ -109,7 +111,10 @@ export async function GET(
     const profile = {
       id: data.public_identifier || data.profile_id || id,
       provider_id: "scrapingdog",
-      name: data.fullName || data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim(),
+      name:
+        data.fullName ||
+        data.full_name ||
+        `${data.first_name || ""} ${data.last_name || ""}`.trim(),
       first_name: data.first_name || "",
       last_name: data.last_name || "",
       headline: data.headline || data.occupation || "",
@@ -128,7 +133,8 @@ export async function GET(
       is_open_profile: false,
       network_distance: "",
       follower_count: parseCount(data.followers) || data.follower_count || 0,
-      connections_count: parseCount(data.connections) || data.connection_count || 0,
+      connections_count:
+        parseCount(data.connections) || data.connection_count || 0,
       primary_locale: {
         country: data.country_full_name || "",
         language: "",
@@ -136,19 +142,22 @@ export async function GET(
       websites: [], // Often not structured in simple scraping
 
       // Work experience
-      work_experience_total_count: data.experience?.length || data.experiences?.length || 0,
-      experiences: (data.experience || data.experiences || []).map((exp: any) => ({
-        company_id: exp.company_id || "",
-        company: exp.company_name || exp.company || "",
-        title: exp.title || exp.position || "",
-        location: exp.location || "",
-        description: exp.description || "",
-        company_logo: exp.company_image || exp.company_logo_url,
-        skills: [],
-        start_date: exp.start_date || parseDate(exp.starts_at),
-        end_date: exp.end_date || parseDate(exp.ends_at),
-        is_current: !exp.ends_at && !exp.end_date,
-      })),
+      work_experience_total_count:
+        data.experience?.length || data.experiences?.length || 0,
+      experiences: (data.experience || data.experiences || []).map(
+        (exp: any) => ({
+          company_id: exp.company_id || "",
+          company: exp.company_name || exp.company || "",
+          title: exp.title || exp.position || "",
+          location: exp.location || "",
+          description: exp.description || "",
+          company_logo: exp.company_image || exp.company_logo_url,
+          skills: [],
+          start_date: exp.start_date || parseDate(exp.starts_at),
+          end_date: exp.end_date || parseDate(exp.ends_at),
+          is_current: !exp.ends_at && !exp.end_date,
+        })
+      ),
 
       // Education
       education_total_count: data.education?.length || 0,
@@ -176,11 +185,15 @@ export async function GET(
       })),
 
       // Certifications
-      certifications_total_count: data.certification?.length || data.certifications?.length || 0,
-      certifications: (data.certification || data.certifications || []).map((cert: any) => ({
-        name: cert.certification || cert.title || cert.name,
-        organization: cert.company_name || cert.authority || cert.organization,
-      })),
+      certifications_total_count:
+        data.certification?.length || data.certifications?.length || 0,
+      certifications: (data.certification || data.certifications || []).map(
+        (cert: any) => ({
+          name: cert.certification || cert.title || cert.name,
+          organization:
+            cert.company_name || cert.authority || cert.organization,
+        })
+      ),
 
       // Volunteering
       volunteering_experience_total_count: data.volunteering?.length || 0,
